@@ -7,11 +7,29 @@ predicate prime?(n: nat)
 }
 
 method CheckPrime(n: nat) returns (p: bool)
-  // ensures p <==> prime?(n)
+  ensures p <==> prime?(n)
 {
   var i: nat;
-  //TODO
+  // NOTE:
   // no forall expressions in the executable code, only in spec and proof
+  if (n <= 1) {
+    return false;
+  }
+
+  i := 2;
+  while (i < n)
+    // explicit termination
+    decreases n - i
+    // head invariant, every checked value (d) til now does not divide n
+    invariant (forall d | 1 < d < i :: n % d != 0)
+  {
+    if (n % i == 0) {
+      return false;
+    }
+    i := i + 1;
+  }
+
+  return true;
 }
 
 method SpecTest() {
