@@ -1,3 +1,8 @@
+/** SumPositives
+ * @name R.H.M. van Oosterhout - Q. Bakens
+ * @id 1450131 - 1454315
+ */
+
 // sumpositives.dfy
 // exercise SumPositives
 

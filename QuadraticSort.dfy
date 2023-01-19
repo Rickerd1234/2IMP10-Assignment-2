@@ -1,6 +1,6 @@
 /** QuadraticSort
- * @name
- * @id
+ * @name R.H.M. van Oosterhout - Q. Bakens
+ * @id 1450131 - 1454315
  */
 
 function Sorted(a: array<int>, low : nat, high : nat) : bool
@@ -10,7 +10,7 @@ function Sorted(a: array<int>, low : nat, high : nat) : bool
    forall i :: low < i < high ==> a[i-1] <= a[i]
 }
 
-method {:verify false} QuadraticSort(a: array<int>)
+method {:verify true} QuadraticSort(a: array<int>)
    modifies a;
    ensures Sorted(a, 0, a.Length);
    ensures multiset(a[..]) == old(multiset(a[..]));
@@ -18,9 +18,18 @@ method {:verify false} QuadraticSort(a: array<int>)
    if (a.Length == 0) {return;}
    var i := 1;
    while (i < a.Length)
+      decreases a.Length - i
+      invariant 0 < i <= a.Length
+      invariant Sorted(a, 0, i)
+      invariant multiset(a[..]) == old(multiset(a[..]))
    {
       var j := i-1;
       while (0 <= j && a[j] > a[j+1])
+         decreases j
+         invariant Sorted(a, 0, j+1)
+         invariant 0 < j+1 < i ==> a[j] <= a[j + 2]
+         invariant Sorted(a, j+1, i+1)
+         invariant multiset(a[..]) == old(multiset(a[..])) 
       {
          a[j], a[j+1] := a[j+1], a[j];
          j := j - 1;
