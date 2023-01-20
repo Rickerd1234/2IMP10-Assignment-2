@@ -6,22 +6,19 @@
 // slopesearch.dfy
 // exercise SlopeSearch
 
-predicate rectseq(f: seq<seq<nat>>)
-{
-  |f| > 0 && (forall i | 0 <= i < |f| :: |f[0]| == |f[i]| > 0)
-}
-
 predicate precon(f: seq<seq<nat>>, X: int)
 {
-  // F is rectangular
-  rectseq(f)
+  // F is non-empty and rectangular
+  |f| > 0 && (forall i | 0 <= i < |f| :: |f[0]| == |f[i]| > 0)
+  
   // All neighbors are increasing
   && (forall i | 0 <= i < |f| :: (forall j | 0 <= j < |f[i]|-1 :: f[i][j] <= f[i][j+1]))
   && (forall i | 0 <= i < |f|-1 :: (forall j | 0 <= j < |f[i]| :: f[i][j] <= f[i+1][j]))
 
   // Cells below (>i) and/or to the right (>j) are increasing
-  && (forall i,j | 0 <= i < |f| && 0 <= j < |f[i]| :: (forall r | i <= r < |f|:: f[r][j] >= f[i][j]))
-  && (forall i,j | 0 <= i < |f| && 0 <= j < |f[i]| :: (forall d | 0 <= d < j:: f[i][d] <= f[i][j]))
+  // Equivalent to the properties above due to transitivity
+  && (forall i,j | 0 <= i < |f| && 0 <= j < |f[i]| :: (forall r | 0 <= r < i:: f[r][j] <= f[i][j]))
+  && (forall i,j | 0 <= i < |f| && 0 <= j < |f[i]| :: (forall c | 0 <= c < j:: f[i][c] <= f[i][j]))
 
   // X exists within f
   && (exists i,j | 0 <= i < |f| && 0 <= j < |f[i]| :: f[i][j] == X)
@@ -62,11 +59,9 @@ method SpecTest() {
   assert |matrix| == 2;
   assert |matrix[0]| == 2;
   assert |matrix[1]| == 1;
-  assert !rectseq(matrix);
 
   matrix := [[1,1], [2,2]];
   assert |matrix| == 2;
-  assert rectseq(matrix);
   assert matrix[0][0] == 1;
   assert matrix[0][1] == 1;
   assert matrix[1][0] == 2;
@@ -79,7 +74,6 @@ method SpecTest() {
   assert matrix[0][1] == 2;
   assert matrix[1][0] == 2;
   assert matrix[1][1] == 0;
-  assert rectseq(matrix);
   assert !precon(matrix, 3);
 
   // Proof of correct precondition
