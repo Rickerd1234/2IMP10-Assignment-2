@@ -34,13 +34,6 @@ predicate heap(a: array<int>, end: int)
   forall i :: 0 < i <= end ==> a[parent(i)] >= a[i]
 }
 
-predicate heapWithoutBubble(a: array<int>, end: int, skip: int)
-  reads a
-  requires 0 <= end < a.Length
-{
-  forall i :: (0 < i <= end && i != skip) ==> a[parent(i)] >= a[i]
-}
-
 // parent node id in the tree
 function method parent(i: int) : int
 { (i - 1) / 2 }
@@ -77,60 +70,63 @@ lemma {:verify true} HeapMax(a: array<int>, i: int)
   }
 }
 
+predicate heapSpecial(a: array<int>, end: int, updateIndex: int)
+  reads a;
+  requires 0 <= end < a.Length;
+  requires 0 <= updateIndex <= a.Length;
+{
+  (forall i | 0 < i <= end :: (i != updateIndex) ==> a[parent(i)] >= a[i]) 
+  && (forall i | 0 < i <= end && updateIndex > 0 :: (parent(i) == updateIndex) ==> a[parent(parent(i))] >= a[i])
+}
+
+
 // turn a into a heap by bubbling up
 method {:verify true} Heapify(a: array<int>)
   modifies a;
   requires a.Length > 0;
   ensures heap(a, a.Length - 1);
   ensures multiset(a[..]) == multiset(old(a[..]));
+{
+  var index: int := 1;
+
+  // Bubble all the elements up, starting from the second element
+  while (index < a.Length)
+    decreases a.Length - index;
+    invariant multiset(a[..]) == multiset(old(a[..]));
+    invariant index - 1 < a.Length;
+    invariant heap(a, index - 1);   
   {
-    var index: int := 1;
-    while (true)
-      decreases a.Length - index;
+    var updateIndex := index;
+    
+    // Recursively bubble the current index up if necessary
+    while (updateIndex >= 0)
+      decreases updateIndex;
       invariant multiset(a[..]) == multiset(old(a[..]));
-      invariant  1 <= index <= a.Length;
-      // invariant heap(a, index - 1);
-      // invariant firstmax(a, index);
-      // invariant a[parent(parent(index))] > a[parent(index)];
-      invariant forall i | 1 < i < index && parent(i) != 0 && parent(parent(i)) != 0 :: a[parent(parent(i))] > a[parent(i)];
+      invariant 0 <= updateIndex < a.Length;
+      invariant heapSpecial(a, index, updateIndex);
+
     {
-      if (index >= a.Length) {
+      // Break from loop if we arrive at the first element
+      if (updateIndex <= 0)
+      {
         break;
       }
 
-      assert heap(a, 0) ==> firstmax(a, 0);
-      assert heap(a, 1) ==> firstmax(a, 1);
-
-      var updateIndex := index;
-      while (updateIndex > 0)
-        decreases updateIndex;
-        invariant multiset(a[..]) == multiset(old(a[..]));
-
-        invariant heap(a, updateIndex) ==> firstmax(a, updateIndex - 1);
-        // invariant 1 < updateIndex == index ==>  a[updateIndex] > a[parent(updateIndex)] || (heapWithoutBubble(a, updateIndex, updateIndex));
-        // invariant 1 < updateIndex < index ==> a[updateIndex] > a[parent(updateIndex)] || (heapWithoutBubble(a, updateIndex, updateIndex));
-        // invariant heapWithoutBubble(a, updateIndex, updateIndex)
-        // invariant heap(a, updateIndex - 1);
+      // Swap the current updateIndex with its parent if it is smaller and recursively try again on the parent of updateIndex
+      if (a[updateIndex] > a[parent(updateIndex)])
       {
-        var parentIndex: int := parent(updateIndex);       
-
-        assert parentIndex < updateIndex;
-        assert updateIndex != 0;
-        assert heap(a, updateIndex) ==> a[lchild(0)] <= a[0];
-        // assert  updateIndex == index ==> ((a[updateIndex] >= a[parent(updateIndex)]) || (heap(a, updateIndex)));
-
-        if (a[updateIndex] > a[parentIndex]) {
-          a[updateIndex], a[parentIndex] := a[parentIndex], a[updateIndex];
-          assert a[updateIndex] <= a[parentIndex];
-          updateIndex := parentIndex;
-        } else {
-          break;
-        }
+        a[parent(updateIndex)], a[updateIndex] := a[updateIndex], a[parent(updateIndex)];
+        updateIndex := parent(updateIndex);
       }
-      index := index + 1;
+      // Break if element is not smaller
+      else
+      {
+        break;
+      }
     }
-
+    index := index + 1;
   }
+}
 
 
 // turn a into a sorted array by putting the head of a to the end
