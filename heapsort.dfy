@@ -68,7 +68,14 @@ lemma {:verify true} HeapMax(a: array<int>, i: int)
   requires 0 <= i < a.Length
   requires heap(a, i)
   ensures firstmax(a, i)
-
+{
+  if (parent(i) >= 0) {
+    assert a[parent(i)] >= a[i];
+    HeapMax(a, i-1);
+  } else {
+    // No help needed
+  }
+}
 
 // turn a into a heap by bubbling up
 method {:verify true} Heapify(a: array<int>)
