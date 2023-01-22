@@ -27,7 +27,7 @@ method {:verify true} QuadraticSort(a: array<int>)
       while (0 <= j && a[j] > a[j+1])
          decreases j
          invariant Sorted(a, 0, j+1)
-         invariant 0 < j+1 < i ==> a[j] <= a[j + 2]
+         invariant 0 <= j < i - 1 ==> a[j] <= a[j + 2]
          invariant Sorted(a, j+1, i+1)
          invariant multiset(a[..]) == old(multiset(a[..])) 
       {
