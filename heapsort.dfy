@@ -1,3 +1,8 @@
+/** HeapSort
+ * @name R.H.M. van Oosterhout - Q. Bakens
+ * @id 1450131 - 1454315
+ */
+
 // heapsort-start.dfy
 // starter file for assignment 2imp10 y2021
 
@@ -63,7 +68,7 @@ lemma {:verify true} HeapMax(a: array<int>, i: int)
   ensures firstmax(a, i)
 {
   if (parent(i) >= 0) {
-    assert a[parent(i)] >= a[i];
+    // assert a[parent(i)] >= a[i];
     HeapMax(a, i-1);
   } else {
     // No help needed
@@ -76,7 +81,7 @@ predicate heapSpecial(a: array<int>, end: int, updateIndex: int)
   requires 0 <= updateIndex <= a.Length;
 {
   (forall i | 0 < i <= end :: (i != updateIndex) ==> a[parent(i)] >= a[i]) 
-  && (forall k :: 0 < k <= end && updateIndex > 0 && parent(k) == updateIndex ==> a[parent(parent(k))] >= a[k])
+  && (forall i :: 0 < i <= end && updateIndex > 0 && parent(i) == updateIndex ==> a[parent(parent(i))] >= a[i])
 }
 
 
@@ -136,9 +141,6 @@ method {:verify true} UnHeapify(a: array<int>)
   requires a.Length > 0
   ensures multiset(a[..]) == multiset(old(a[..]))
   ensures sorted(a, 0, a.Length - 1)
-// {
-
-// }
 
 // sort a according to the heapsort algorithm
 method {:verify true} HeapSort(a: array<int>)
@@ -148,47 +150,6 @@ method {:verify true} HeapSort(a: array<int>)
   ensures sorted(a, 0, a.Length - 1);
 {
   Heapify(a);
-  var index: int := 1;
-  var heapSize: int := a.Length - 1;
 
-  // Bubble all the elements up, starting from the second element
-  while (index < a.Length)
-    decreases a.Length - index;
-    invariant multiset(a[..]) == multiset(old(a[..]));
-    invariant index - 1 < a.Length;
-    invariant heap(a, index - 1);   
-    // invariant  <= heapSize <= a.Length;
-    // invariant sorted(a, heapSize, a.Length);
-  {
-    var updateIndex := index;
-    heapSize := heapSize - 1;
-    
-    // Recursively bubble the current index up if necessary
-    while (updateIndex <= a.Length)
-      decreases a.Length - updateIndex;
-      invariant multiset(a[..]) == multiset(old(a[..]));
-      invariant 0 <= updateIndex < a.Length;
-      invariant heapSpecial(a, index, updateIndex);
-    {
-      // Break from loop if we arrive at the first element
-      if (updateIndex >= (a.Length / 2))
-      {
-        break;
-      }
-
-      // Swap the current updateIndex with its parent if it is smaller and recursively try again on the parent of updateIndex
-      if (a[lchild(updateIndex)] > a[updateIndex])
-      {
-        a[lchild(updateIndex)], a[updateIndex] := a[updateIndex], a[lchild(updateIndex)];
-        updateIndex := lchild(updateIndex);
-      }
-      // Break if element is not smaller
-      else
-      {
-        assert heap(a, index);
-        break;
-      }
-    }
-    index := index + 1;
-  }
+  UnHeapify(a);
 }
